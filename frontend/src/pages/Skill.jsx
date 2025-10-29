@@ -99,7 +99,7 @@ export default function Skill() {
 
       // Step 3: Navigate to home
       setTimeout(() => {
-        navigate("/");
+        navigate("/interview");
       }, 1500);
 
     } catch (error) {

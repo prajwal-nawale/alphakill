@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Layout from "./components/Layout";
 import Auth from "./pages/Auth";
 import Skill from "./pages/Skill";
+import Interview from "./pages/Interview";
 
 // Create Auth Context
 const AuthContext = createContext();
@@ -57,6 +58,7 @@ function App() {
             <Route path="/*" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="skill" element={<Skill />} />
+              <Route path="interview" element={<Interview />} />
               {/* Add Interview and Report routes later */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

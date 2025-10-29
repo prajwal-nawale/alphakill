@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-export default function Mic({ onTranscript, onSkillsUpdate }) {
+export default function Mic({ onTranscript, onFinalTranscript, showControls = true }) {
   const [isListening, setIsListening] = useState(false);
   const [currentSessionText, setCurrentSessionText] = useState("");
   const recognitionRef = useRef(null);
   const silenceTimerRef = useRef(null);
-  const finalTranscriptRef = useRef(""); // Track only final recognized text
+  const finalTranscriptRef = useRef("");
 
   // Cleanup on unmount
   useEffect(() => {
@@ -15,12 +15,8 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
   }, []);
 
   const startListening = () => {
-    if (isListening) {
-      console.log("Already listening...");
-      return;
-    }
+    if (isListening) return;
 
-    // Check browser support
     if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
       alert("Speech recognition not supported in this browser. Please use Chrome or Edge.");
       return;
@@ -29,7 +25,6 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
-    // Configuration
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
@@ -42,12 +37,11 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
     };
 
     recognition.onresult = (event) => {
-      resetSilenceTimer(); // Reset timer on any speech activity
+      resetSilenceTimer();
       
       let interimTranscript = "";
       let newFinalTranscript = "";
 
-      // Process all new results since last result
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         
@@ -65,7 +59,7 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
         onTranscript?.(finalTranscriptRef.current);
       }
 
-      // For real-time display, combine final + interim
+      // For real-time display
       const displayText = finalTranscriptRef.current + interimTranscript;
       onTranscript?.(displayText);
     };
@@ -73,7 +67,6 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
     recognition.onerror = (event) => {
       console.error("❌ Recognition error:", event.error);
       
-      // Don't stop on no-speech error, it's common
       if (event.error === 'no-speech') {
         console.log("No speech detected, continuing to listen...");
         return;
@@ -90,20 +83,12 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
       console.log("🔴 Speech recognition ended");
       setIsListening(false);
       clearTimeout(silenceTimerRef.current);
-      
-      // Auto-add skills if we have content and recognition ended naturally
-      if (finalTranscriptRef.current.trim() && recognitionRef.current) {
-        console.log("Auto-adding skills after recognition ended");
-        onSkillsUpdate?.(finalTranscriptRef.current);
-      }
     };
 
-    // Store and start recognition
     recognitionRef.current = recognition;
     
     try {
       recognition.start();
-      console.log("✅ Recognition started successfully");
     } catch (error) {
       console.error("Failed to start recognition:", error);
       setIsListening(false);
@@ -111,8 +96,6 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
   };
 
   const stopListening = () => {
-    console.log("🛑 Stopping listening manually");
-    
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -125,10 +108,9 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
     setIsListening(false);
     clearTimeout(silenceTimerRef.current);
 
-    // Only add skills if we have content and it's a manual stop
-    if (finalTranscriptRef.current.trim()) {
-      console.log("Adding skills on manual stop:", finalTranscriptRef.current);
-      onSkillsUpdate?.(finalTranscriptRef.current);
+    // Call onFinalTranscript if we have content
+    if (finalTranscriptRef.current.trim() && onFinalTranscript) {
+      onFinalTranscript?.(finalTranscriptRef.current);
     }
   };
 
@@ -137,19 +119,10 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
     silenceTimerRef.current = setTimeout(() => {
       console.log("⏰ 15 seconds of silence - stopping automatically");
       stopListening();
-    }, 15000); // Reduced to 5 seconds for better UX
-  };
-
-  const addToSkills = () => {
-    if (finalTranscriptRef.current.trim()) {
-      console.log("✅ Manually adding to skills:", finalTranscriptRef.current);
-      onSkillsUpdate?.(finalTranscriptRef.current);
-      clearSession();
-    }
+    }, 15000);
   };
 
   const clearSession = () => {
-    console.log("🗑️ Clearing session");
     finalTranscriptRef.current = "";
     setCurrentSessionText("");
     onTranscript?.("");
@@ -159,26 +132,13 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
     if (isListening) {
       stopListening();
     } else {
-      // Clear previous session when starting fresh
-      if (!finalTranscriptRef.current.trim()) {
-        clearSession();
-      }
       startListening();
     }
   };
 
   return (
     <div style={{ marginBottom: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          alignItems: "center",
-          marginBottom: "10px",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* Single toggle button */}
+      <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "10px" }}>
         <button
           onClick={toggleListening}
           style={{
@@ -189,104 +149,64 @@ export default function Mic({ onTranscript, onSkillsUpdate }) {
             borderRadius: "4px",
             cursor: "pointer",
             fontWeight: "bold",
-            minWidth: "140px"
           }}
         >
-          {isListening ? (
-            <>🛑 Stop Recording</>
-          ) : (
-            <>🎤 Start Recording</>
-          )}
+          {isListening ? "🛑 Stop" : "🎤 Start"}
         </button>
 
-        <button
-          onClick={addToSkills}
-          disabled={!finalTranscriptRef.current.trim()}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: finalTranscriptRef.current.trim() ? "#007bff" : "#ccc",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: finalTranscriptRef.current.trim() ? "pointer" : "not-allowed",
-          }}
-        >
-          ✅ Add to Skills
-        </button>
-
-        <button
-          onClick={clearSession}
-          disabled={!finalTranscriptRef.current.trim()}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: finalTranscriptRef.current.trim() ? "#6c757d" : "#ccc",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: finalTranscriptRef.current.trim() ? "pointer" : "not-allowed",
-          }}
-        >
-          🗑️ Clear
-        </button>
-      </div>
-
-      {/* Status indicators */}
-      <div style={{ marginBottom: "10px" }}>
-        {isListening && (
-          <div style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "8px",
-            color: "#dc3545", 
-            fontWeight: "bold",
-            marginBottom: "5px"
-          }}>
-            <div style={{
-              width: "12px",
-              height: "12px",
-              backgroundColor: "#dc3545",
-              borderRadius: "50%",
-              animation: "pulse 1.5s infinite"
-            }}></div>
-            🎧 Listening... (auto-stops after 15s silence)
-          </div>
-        )}
-        
-        {finalTranscriptRef.current.trim() && (
-          <div style={{ 
-            color: "#28a745", 
-            fontSize: "14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "5px"
-          }}>
-            ✅ <strong>Ready to add:</strong> {finalTranscriptRef.current.length} characters captured
-          </div>
+        {showControls && (
+          <>
+            <button
+              onClick={clearSession}
+              disabled={!finalTranscriptRef.current.trim()}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: finalTranscriptRef.current.trim() ? "#6c757d" : "#ccc",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: finalTranscriptRef.current.trim() ? "pointer" : "not-allowed",
+              }}
+            >
+              🗑️ Clear
+            </button>
+          </>
         )}
       </div>
 
-      {/* Current session display */}
-      {currentSessionText && (
-        <div
-          style={{
-            marginTop: "10px",
-            padding: "15px",
-            backgroundColor: "#f8f9fa",
-            border: "2px solid #dee2e6",
-            borderRadius: "8px",
-            fontSize: "16px",
-            lineHeight: "1.5",
-            minHeight: "60px"
-          }}
-        >
-          <div style={{ fontWeight: "bold", marginBottom: "5px", color: "#495057" }}>
-            📝 Your spoken text:
-          </div>
-          {currentSessionText}
+      {isListening && (
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: "8px",
+          color: "#dc3545", 
+          fontWeight: "bold",
+          marginBottom: "10px"
+        }}>
+          <div style={{
+            width: "12px",
+            height: "12px",
+            backgroundColor: "#dc3545",
+            borderRadius: "50%",
+            animation: "pulse 1.5s infinite"
+          }}></div>
+          Listening... (auto-stops after 15s silence)
         </div>
       )}
 
-      {/* CSS for pulse animation */}
+      {showControls && currentSessionText && (
+        <div style={{
+          marginTop: "10px",
+          padding: "15px",
+          backgroundColor: "#f8f9fa",
+          border: "1px solid #dee2e6",
+          borderRadius: "4px",
+          fontSize: "14px",
+        }}>
+          <strong>Current transcript:</strong> {currentSessionText}
+        </div>
+      )}
+
       <style>
         {`
           @keyframes pulse {
