@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from '../App';
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Auth() {
@@ -10,26 +11,25 @@ export default function Auth() {
   const [isSignup, setIsSignup] = useState(true);
   
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   async function handleAuth(e) {
     e.preventDefault();
 
     try {
       if (isSignup) {
-        // Sign up
         const response = await axios.post("http://localhost:3000/v1/user/signup", {
           name, email, password
         });
         setMessage(response.data.message);
       } else {
-        // Sign in
         const response = await axios.post("http://localhost:3000/v1/user/signin", {
           email, password
         });
         
-        // Save user info and redirect automatically
         login(response.data.token, response.data.userId, response.data.name || name);
         setMessage("Login successful!");
+        // No need to navigate - the App.jsx will automatically redirect to Layout
       }
     } catch (error) {
       setMessage(error.response?.data?.message || "Something went wrong");
@@ -47,7 +47,7 @@ export default function Auth() {
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <div style={{ fontSize: '1.5rem', fontWeight: 'bold',display: 'flex', justifyContent:'center' }}>
+        <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
           Prep Me Up
         </div>
         <div>

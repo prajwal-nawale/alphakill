@@ -1,18 +1,12 @@
 import { useAuth } from '../App';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 
 export default function Layout() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   return (
     <div>
-      {/* Topbar - Only shows when logged in */}
+      {/* Topbar - Shows for logged in users only */}
       <div style={{ 
         backgroundColor: 'black', 
         color: 'white', 
@@ -22,15 +16,27 @@ export default function Layout() {
         alignItems: 'center'
       }}>
         <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-          Prep Me Up
+          <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
+            Prep Me Up
+          </Link>
         </div>
 
         <div>
-          <span>Welcome, {user?.name}!</span>
+          {/* Navigation for logged in users using Link */}
+          <Link to="/" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
+            Home
+          </Link>
+          <Link to="/skill" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
+            Interview
+          </Link>
+          <Link to="/report" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
+            Report
+          </Link>
+          
+          <span style={{ marginRight: '2rem' }}>Welcome, {user?.name}!</span>
           <button 
-            onClick={handleLogout}
+            onClick={logout}
             style={{ 
-              marginLeft: '2rem',
               padding: '0.5rem 1rem',
               backgroundColor: 'red',
               color: 'white',
@@ -43,24 +49,10 @@ export default function Layout() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div style={{ padding: '2rem' }}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          {/* Add other routes here later */}
-        </Routes>
+        <Outlet />
       </div>
-    </div>
-  );
-}
-
-// Simple Home Page Component
-function HomePage() {
-  return (
-    <div>
-      <h1>Welcome to Home Page!</h1>
-      <p>You are successfully logged in.</p>
-      <p>This is where your interview preparation content will go.</p>
     </div>
   );
 }
