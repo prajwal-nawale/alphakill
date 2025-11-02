@@ -4,7 +4,8 @@ import Layout from "./components/Layout";
 import Auth from "./pages/Auth";
 import Skill from "./pages/Skill";
 import Interview from "./pages/Interview";
-
+import Report from "./pages/Report";
+import ReportsList from "./pages/ReportsList";
 // Create Auth Context
 const AuthContext = createContext();
 
@@ -59,6 +60,8 @@ function App() {
               <Route index element={<Home />} />
               <Route path="skill" element={<Skill />} />
               <Route path="interview" element={<Interview />} />
+              <Route path="report/:id" element={<Report />} />
+              <Route path="reports" element={<ReportsList />} />
               {/* Add Interview and Report routes later */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

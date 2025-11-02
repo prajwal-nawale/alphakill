@@ -6,7 +6,7 @@ const OpenAI = require("openai");
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY3,
   defaultHeaders: {
     "HTTP-Referer": "http://localhost:3000",
     "X-Title": "My App",
@@ -23,61 +23,6 @@ const  { userMiddleware }=require("../middleware/user");
 const aiModel="deepseek/deepseek-chat-v3.1:free";
 
 const { userModel,userInputModel,aiQuestionModel,userAnswernModel,reportModel }=require("../db");
-
-// userRouter.post("/signup",async (req,res)=>{
-//     try{
-//     const{name,email,password}=req.body;
-//     const user=await userModel.create({
-//         name:name,
-//         email:email,
-//         password:password
-//     })
-//     await userInputModel.create({
-//         userId:user._id,
-//         input:[]
-//     })
-//     await aiQuestionModel.create({
-//         userId:user._id,
-//         output:[]
-//     })
-    
-//     res.json({
-//         message:"User Signed up"
-//     })
-//     }catch(err){
-//         res.status(403).json({
-//             message:"User already exists",
-//             message:err.message,
-//             success:false
-//         })
-//     }
-// })
-
-// userRouter.post("/signin",async (req,res)=>{
-//     const{email,password}=req.body;
-//     const userFound=await userModel.findOne({
-//         email:email,
-//         password:password
-//     })
-//     if(userFound){
-//         const token=jwt.sign({
-//             id:userFound._id
-//         },JWT_USER_SECRET);
-//     res.json({
-//         message:"User Signed in",
-//         token:token
-//     })
-
-//     }else{
-        
-//         res.status(401).json({
-//             message:"User Credentials Invalid"
-
-//         })
-//     }
-
-    
-// })
 
 userRouter.post("/signup", async (req, res) => {
   try {
@@ -172,7 +117,7 @@ userRouter.post("/addInputSkill",userMiddleware,async (req,res)=>{
     const{userId,input}=req.body;
     const doc=await userInputModel.findOneAndUpdate(
         { userId },
-        { $push: { input: input } },
+        { $set: { input: input } },
         { new: true,upsert:true}
     )
     res.json({
@@ -264,7 +209,7 @@ userRouter.post("/submitAnswer",userMiddleware,async(req,res)=>{
 })
 userRouter.post("/generateReport",userMiddleware, async (req, res) => {
   try {
-    const { questionId,userId } = req.body;
+    const { questionId, userId } = req.body;
 
     // Fetch all answers for the given questionId
     const allAnswers = await userAnswernModel.find({
@@ -284,7 +229,8 @@ userRouter.post("/generateReport",userMiddleware, async (req, res) => {
 
     const prompt = `
 Analyze these interview answers like a experienced developer giving friendly feedback but strict to a junior colleague. The user spoke their answers, so ignore small grammar issues from voice transcription.
-
+If user says i dont know or something relevent to mid aur business case related questions for 1 or 2 questions is somewhat understandable if he is saying dont know to all quuestion directly comdemn it as this is waste to interviewers time
+If a person is deliberately trying to give irrelevant answers just score him 0 for that answer and mention in feedback that this is not acceptable in real interviews.
 Provide your response using exactly this format with #### between sections:
 
 Overall Score: [number between 0-100]
@@ -324,10 +270,35 @@ F: [Specific feedback for this answer]
 Q2: [question text] 
 F: [Specific feedback for this answer]
 --
-[Continue for all questions]
+Q3: [question text] 
+F: [Specific feedback for this answer]
+--
+Q4: [question text] 
+F: [Specific feedback for this answer]
+--
+Q5: [question text] 
+F: [Specific feedback for this answer]
+--
+Q6: [question text] 
+F: [Specific feedback for this answer]
+--
+Q7: [question text] 
+F: [Specific feedback for this answer]
+--
+Q8: [question text] 
+F: [Specific feedback for this answer]
+--
+Q9: [question text] 
+F: [Specific feedback for this answer]
+--
+Q10: [question text] 
+F: [Specific feedback for this answer]
+--
+
 ####
 Last feedback must be very honest and harsh if he did well apreciate but if he tried to make irrelevent answers be harsh
 Here are the questions and answers to analyze:
+consider your self as first person no, extra paras saying  as an AI model etc just give the feedback directly
 ${answersText}
 
 Remember: Talk like a real person, not a corporate robot. Be helpful but honest.
@@ -336,56 +307,61 @@ Remember: Talk like a real person, not a corporate robot. Be helpful but honest.
     const completion = await openai.chat.completions.create({
       model: "deepseek/deepseek-chat-v3.1:free",
       messages: [{ role: "user", content: prompt }],
-        max_tokens: 1500
+      max_tokens: 1500
     });
 
     const aiResponse = completion.choices[0].message.content;
 
-    const parsedReport=parseReport(aiResponse);
+    const parsedReport = parseReport(aiResponse);
     const {
-  overallScore,
-  strengths,
-  areasToWorkOn,
-  communicationSkills,
-  technicalKnowledge,
-  quickTips,
-  scoresBreakdown,
-  answerFeedback,
-  lastFeedback
-} = parsedReport;
+      overallScore,
+      strengths,
+      areasToWorkOn,
+      communicationSkills,
+      technicalKnowledge,
+      quickTips,
+      scoresBreakdown,
+      answerFeedback,
+      lastFeedback
+    } = parsedReport;
 
-
-    await reportModel.create({
-        userId,
-        questionId,
-        overallScore,
-        strengths,
-        areasToWorkOn,
-        communicationSkills,
-        technicalKnowledge,
-        quickTips,
-        scoresBreakdown,
-        answerFeedback,
-        lastFeedback
-    })
-
-    res.json({
-        message:"Report Generated",
-        report: parsedReport,
+    // Save report and get the saved document
+    const savedReport = await reportModel.create({
+      userId,
+      questionId,
+      overallScore,
+      strengths,
+      areasToWorkOn,
+      communicationSkills,
+      technicalKnowledge,
+      quickTips,
+      scoresBreakdown,
+      answerFeedback,
+      lastFeedback
     });
+
+    // ✅ FIX: Return the actual MongoDB ID
+    res.json({
+      message: "Report Generated",
+      reportId: savedReport._id, // This is the crucial fix
+      report: parsedReport,
+    });
+
   } catch (err) {
     console.error("Error generating report:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 // ✅ done: fetch report from DB
-userRouter.get("/getReport/:userId/:questionId", async (req, res) => {
+// ✅ SECURE - Use authenticated user from token
+userRouter.get("/getReport/:id", userMiddleware, async (req, res) => {
   try {
-    const { userId, questionId } = req.params;
+    const { id } = req.params;
+    const userId = req.userId;
 
     const report = await reportModel.findOne({
-      userId,
-      questionId
+      _id: new mongoose.Types.ObjectId(id),
+      userId: new mongoose.Types.ObjectId(userId)
     });
 
     if (!report) {
@@ -396,7 +372,6 @@ userRouter.get("/getReport/:userId/:questionId", async (req, res) => {
       message: "Report fetched successfully",
       report
     });
-
   } catch (err) {
     console.error("Error fetching report:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -442,7 +417,7 @@ function parseReport(aiResponse) {
     technicalKnowledge: sections[4] || "",
     quickTips: toArray(sections[5]),
     scoresBreakdown: parseScores(sections[6]),
-    answerFeedback: toArray(sections[7]),
+    answerFeedback: sections[7] ? sections[7].split("--").map(s => s.trim()).filter(Boolean) : [],
     lastFeedback: sections[8] || ""
   };
 }

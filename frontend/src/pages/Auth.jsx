@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { useAuth } from '../App';
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Auth() {
@@ -11,7 +12,7 @@ export default function Auth() {
   const [isSignup, setIsSignup] = useState(true);
   
   const { login } = useAuth();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   async function handleAuth(e) {
     e.preventDefault();

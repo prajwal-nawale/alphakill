@@ -99,38 +99,43 @@ export default function Interview() {
     }
   };
 
-  const generateReport = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      setIsLoading(true);
-      const response = await axios.post(
-        "http://localhost:3000/v1/user/generateReport",
-        { userId: user.userId, questionId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+const generateReport = async () => {
+  const token = localStorage.getItem("token");
+  try {
+    setIsLoading(true);
+    const response = await axios.post(
+      "http://localhost:3000/v1/user/generateReport",
+      { userId: user.userId, questionId },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-      console.log("Report generated:", response.data);
-      setMessage("Interview completed! Generating report...");
-
-      // Navigate to report page
+    console.log("Full response:", response.data);
+    setMessage("Interview completed! Generating report...");
+    
+    // ✅ FIX: Get reportId from the correct field
+    const reportId = response.data.reportId;
+    
+    if (reportId && reportId !== "undefined") {
       setTimeout(() => {
-        //navigate(`/report/${user.userId}/${questionId}`);
-        navigate("/")
+        navigate(`/report/${reportId}`);
       }, 2000);
-
-    } catch (error) {
-      console.error("Error generating report:", error);
-      setMessage("Error generating report. Please try again.");
-    } finally {
-      setIsLoading(false);
+    } else {
+      console.error("No reportId received:", response.data);
+      setMessage("Error: Could not generate report. Please try again.");
     }
-  };
 
+  } catch (error) {
+    console.error("Error generating report:", error);
+    setMessage("Error generating report. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
   const clearAnswer = () => {
     setAnswer("");
     setMessage("");

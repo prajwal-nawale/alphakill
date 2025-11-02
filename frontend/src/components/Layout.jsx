@@ -29,8 +29,9 @@ export default function Layout() {
           <Link to="/skill" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
             Interview
           </Link>
-          <Link to="/report" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
-            Report
+         
+          <Link to="/reports" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
+          Reports
           </Link>
           
           <span style={{ marginRight: '2rem' }}>Welcome, {user?.name}!</span>
