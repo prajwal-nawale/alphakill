@@ -15,16 +15,17 @@ export default function ReportsList() {
         setLoading(true);
         const token = localStorage.getItem("token");
         
-        // This endpoint should return all reports for the user
         const response = await axios.get(
-          `http://localhost:3000/v1/user/getAllReports/${user.userId}`,
+          "http://localhost:3000/v1/user/reports",
           {
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
         
+        console.log("Reports API Response:", response.data); // Debug log
         setReports(response.data.reports || []);
       } catch (err) {
         console.error("Error fetching reports:", err);
@@ -54,6 +55,9 @@ export default function ReportsList() {
       minute: '2-digit'
     });
   };
+
+  // Debug: Check what data we have
+  console.log("Current reports state:", reports);
 
   if (loading) {
     return (
@@ -181,123 +185,128 @@ export default function ReportsList() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {reports.map((report, index) => (
-            <div 
-              key={report.questionId || index}
-              style={{ 
-                padding: '25px', 
-                backgroundColor: 'white',
-                border: '2px solid #e9ecef',
-                borderRadius: '8px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                transition: 'transform 0.2s, box-shadow 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                <div>
-                  <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
-                    Interview Report #{reports.length - index}
-                  </h3>
-                  <p style={{ margin: 0, color: '#6c757d', fontSize: '14px' }}>
-                    Completed on {formatDate(report.createdAt || new Date())}
-                  </p>
-                  {report.skills && (
-                    <div style={{ marginTop: '8px' }}>
-                      <strong>Skills:</strong> {report.skills.join(', ')}
+          {reports.map((report, index) => {
+            // ✅ Use the correct ID field - try _id first, then reportId as fallback
+            const reportId = report._id || report.reportId;
+            
+            return (
+              <div 
+                key={reportId || index}
+                style={{ 
+                  padding: '25px', 
+                  backgroundColor: 'white',
+                  border: '2px solid #e9ecef',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
+                      Interview Report #{reports.length - index}
+                    </h3>
+                    <p style={{ margin: 0, color: '#6c757d', fontSize: '14px' }}>
+                      Completed on {formatDate(report.createdAt || new Date())}
+                    </p>
+                    {report.skills && (
+                      <div style={{ marginTop: '8px' }}>
+                        <strong>Skills:</strong> {report.skills.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      fontSize: '2.5rem',
+                      fontWeight: 'bold',
+                      color: getScoreColor(report.overallScore),
+                      lineHeight: '1'
+                    }}>
+                      {report.overallScore}
                     </div>
-                  )}
-                </div>
-                
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '2.5rem',
-                    fontWeight: 'bold',
-                    color: getScoreColor(report.overallScore),
-                    lineHeight: '1'
-                  }}>
-                    {report.overallScore}
-                  </div>
-                  <div style={{
-                    fontSize: '0.9rem',
-                    color: '#6c757d',
-                    fontWeight: '500'
-                  }}>
-                    /100
+                    <div style={{
+                      fontSize: '0.9rem',
+                      color: '#6c757d',
+                      fontWeight: '500'
+                    }}>
+                      /100
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Quick Stats */}
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
-                gap: '15px',
-                marginBottom: '20px'
-              }}>
-                <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#e7f3ff', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#007bff' }}>
-                    {report.strengths?.length || 0}
+                {/* Quick Stats */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+                  gap: '15px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#e7f3ff', borderRadius: '6px' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#007bff' }}>
+                      {report.strengths?.length || 0}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#0056b3' }}>Strengths</div>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: '#0056b3' }}>Strengths</div>
-                </div>
-                <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#fff3cd', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ffc107' }}>
-                    {report.areasToWorkOn?.length || 0}
+                  <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#fff3cd', borderRadius: '6px' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ffc107' }}>
+                      {report.areasToWorkOn?.length || 0}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#856404' }}>Areas to Improve</div>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: '#856404' }}>Areas to Improve</div>
-                </div>
-                <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#f8d7da', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#dc3545' }}>
-                    {report.quickTips?.length || 0}
+                  <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#f8d7da', borderRadius: '6px' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#dc3545' }}>
+                      {report.quickTips?.length || 0}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#721c24' }}>Tips</div>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: '#721c24' }}>Tips</div>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
-                <Link 
-                  to={`/report/${report.questionId}`}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  📊 View Full Report
-                </Link>
-                <Link 
-                  to="/skill"
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    textDecoration: 'none',
-                    fontSize: '14px'
-                  }}
-                >
-                  🎯 New Interview
-                </Link>
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
+                  <Link 
+                    to={`/report/${reportId}`}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    📊 View Full Report
+                  </Link>
+                  <Link 
+                    to="/skill"
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      textDecoration: 'none',
+                      fontSize: '14px'
+                    }}
+                  >
+                    🎯 New Interview
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

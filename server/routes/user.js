@@ -380,7 +380,50 @@ userRouter.get("/getReport/:reportId", userMiddleware, async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+userRouter.get("/reports", userMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
 
+    const reports = await reportModel.find({
+      userId: new mongoose.Types.ObjectId(userId)
+    })
+    .sort({ createdAt: -1 })
+    .select('-__v')
+    .lean();
+
+    if (!reports || reports.length === 0) {
+      return res.status(404).json({ 
+        message: "No reports found for this user",
+        reports: []
+      });
+    }
+
+    res.json({
+      message: "Reports fetched successfully",
+      count: reports.length,
+      reports: reports.map(report => ({
+        _id: report._id, // ✅ Add this line
+        reportId: report._id, // ✅ Keep this for compatibility
+        questionId: report.questionId,
+        overallScore: report.overallScore,
+        createdAt: report.createdAt,
+        strengths: report.strengths,
+        areasToWorkOn: report.areasToWorkOn,
+        technicalKnowledge: report.technicalKnowledge,
+        // ✅ Add any other fields you need in the list view
+        // skills: report.skills || [], // If you have this field
+        // quickTips: report.quickTips || [] // If you have this field
+      }))
+    });
+
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+    res.status(500).json({ 
+      message: "Internal server error",
+      error: err.message 
+    });
+  }
+});
 userRouter.get("/getInputVoice/:userId",userMiddleware,async (req,res)=>{
     try{
     const {userId}=req.params;
