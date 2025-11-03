@@ -155,12 +155,15 @@ userRouter.post("/aiQuestionGeneration",userMiddleware, async (req, res) => {
 
     const aiResponse = completion.choices[0].message.content;
     const questionsArray = aiResponse.split("\n\n").map(q => q.replace(/^\d+\.\s*/, ""));
-    await aiQuestionModel.findOneAndUpdate(
-        { userId },
-        { output:questionsArray  },
-        {new:true, upsert:true}
-    )
-    res.json({ Message: "Questions generation complete" });
+    const newQuestionSet = await aiQuestionModel.create({
+        userId,
+        output: questionsArray
+      });
+
+      res.json({
+        message: "Questions generation complete",
+        questionId: newQuestionSet._id // return this!
+      });
   } catch (err) {
     console.error("Error:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -169,7 +172,7 @@ userRouter.post("/aiQuestionGeneration",userMiddleware, async (req, res) => {
 
 userRouter.get("/getQuestions/:userId/:index",userMiddleware,async(req,res)=>{
     const{ userId, index }=req.params;
-    const questionArray=await aiQuestionModel.findOne({ userId: new mongoose.Types.ObjectId(userId) });
+    const questionArray=await aiQuestionModel.findOne({ userId: new mongoose.Types.ObjectId(userId) }).sort({ createdAt: -1});
     if(!questionArray||!questionArray.output.length){
         return res.status(404).json({
             message:"No questions found for this user"
@@ -354,13 +357,13 @@ Remember: Talk like a real person, not a corporate robot. Be helpful but honest.
 });
 // ✅ done: fetch report from DB
 // ✅ SECURE - Use authenticated user from token
-userRouter.get("/getReport/:id", userMiddleware, async (req, res) => {
+userRouter.get("/getReport/:reportId", userMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { reportId } = req.params;
     const userId = req.userId;
 
     const report = await reportModel.findOne({
-      _id: new mongoose.Types.ObjectId(id),
+      _id: new mongoose.Types.ObjectId(reportId),
       userId: new mongoose.Types.ObjectId(userId)
     });
 
