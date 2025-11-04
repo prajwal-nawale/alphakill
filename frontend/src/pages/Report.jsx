@@ -19,10 +19,7 @@ export default function Report() {
           },
         });
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch report");
-        }
-
+        if (!res.ok) throw new Error("Failed to fetch report");
         const data = await res.json();
         setReport(data.report);
       } catch (err) {
@@ -36,9 +33,26 @@ export default function Report() {
     fetchReport();
   }, [reportId, user]);
 
-  if (loading) return <div>Loading report...</div>;
-  if (error) return <div>{error}</div>;
-  if (!report) return <div>No report found.</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen text-lg text-gray-600">
+        Loading report...
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="flex justify-center items-center h-screen text-red-600 text-lg">
+        {error}
+      </div>
+    );
+
+  if (!report)
+    return (
+      <div className="flex justify-center items-center h-screen text-gray-600 text-lg">
+        No report found.
+      </div>
+    );
 
   const {
     overallScore,
@@ -53,62 +67,101 @@ export default function Report() {
   } = report;
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
-      <h1>Interview Report</h1>
+    <div className="max-w-4xl mx-auto px-6 py-10 font-sans bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold text-center text-blue-800 mb-8">
+        Interview Report
+      </h1>
 
-      <div>
-        <h2>Overall Score</h2>
-        <p>{overallScore}</p>
+      {/* Overall Score */}
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Overall Score
+        </h2>
+        <p className="text-gray-700 text-lg">{overallScore}</p>
       </div>
 
-      <div>
-        <h2>Strengths</h2>
-        <ul>
-          {strengths.map((s, i) => <li key={i}>{s}</li>)}
+      {/* Strengths */}
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Strengths
+        </h2>
+        <ul className="list-disc list-inside space-y-1 text-gray-700">
+          {strengths.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
         </ul>
       </div>
 
-      <div>
-        <h2>Areas to Work On</h2>
-        <ul>
-          {areasToWorkOn.map((a, i) => <li key={i}>{a}</li>)}
+      {/* Areas to Work On */}
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Areas to Work On
+        </h2>
+        <ul className="list-disc list-inside space-y-1 text-gray-700">
+          {areasToWorkOn.map((a, i) => (
+            <li key={i}>{a}</li>
+          ))}
         </ul>
       </div>
 
-      <div>
-        <h2>Communication Skills</h2>
-        <p>{communicationSkills}</p>
+      {/* Communication Skills */}
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Communication Skills
+        </h2>
+        <p className="text-gray-700">{communicationSkills}</p>
       </div>
 
-      <div>
-        <h2>Technical Knowledge</h2>
-        <p>{technicalKnowledge}</p>
+      {/* Technical Knowledge */}
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Technical Knowledge
+        </h2>
+        <p className="text-gray-700">{technicalKnowledge}</p>
       </div>
 
-      <div>
-        <h2>Quick Tips</h2>
-        <ul>
-          {quickTips.map((tip, i) => <li key={i}>{tip}</li>)}
+      {/* Quick Tips */}
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Quick Tips
+        </h2>
+        <ul className="list-disc list-inside space-y-1 text-gray-700">
+          {quickTips.map((tip, i) => (
+            <li key={i}>{tip}</li>
+          ))}
         </ul>
       </div>
 
-      <div>
-        <h2>Scores Breakdown</h2>
+      {/* Scores Breakdown */}
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Scores Breakdown
+        </h2>
         {Object.entries(scoresBreakdown).map(([key, val], i) => (
-          <p key={i}><strong>{key}:</strong> {val}</p>
+          <p key={i} className="text-gray-700">
+            <strong className="text-gray-900">{key}:</strong> {val}
+          </p>
         ))}
       </div>
 
-      <div>
-        <h2>Answer Feedback</h2>
+      {/* Answer Feedback */}
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Answer Feedback
+        </h2>
         {answerFeedback.map((feedback, i) => (
-          <p key={i}>{feedback}</p>
+          <p key={i} className="text-gray-700 mb-2">
+            {feedback}
+          </p>
         ))}
       </div>
 
-      <div>
-        <h2>Final Feedback</h2>
-        <p>{lastFeedback}</p>
+      {/* Final Feedback */}
+      <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
+        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+          Final Feedback
+        </h2>
+        <p className="text-gray-700">{lastFeedback}</p>
       </div>
     </div>
   );

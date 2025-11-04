@@ -234,6 +234,10 @@ userRouter.post("/generateReport",userMiddleware, async (req, res) => {
 Analyze these interview answers like a experienced developer giving friendly feedback but strict to a junior colleague. The user spoke their answers, so ignore small grammar issues from voice transcription.
 If user says i dont know or something relevent to mid aur business case related questions for 1 or 2 questions is somewhat understandable if he is saying dont know to all quuestion directly comdemn it as this is waste to interviewers time
 If a person is deliberately trying to give irrelevant answers just score him 0 for that answer and mention in feedback that this is not acceptable in real interviews.
+
+Do NOT print any introduction, headings, Markdown, or conversational preface. 
+Do NOT use stars (**), triple-dashes, or heading marks (###). 
+Do NOT say "Of course", "As an AI", or similar.
 Provide your response using exactly this format with #### between sections:
 
 Overall Score: [number between 0-100]
@@ -310,7 +314,8 @@ Remember: Talk like a real person, not a corporate robot. Be helpful but honest.
     const completion = await openai.chat.completions.create({
       model: "deepseek/deepseek-chat-v3.1:free",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 1500
+      max_tokens: 1500,
+      temperature: 0.1
     });
 
     const aiResponse = completion.choices[0].message.content;
