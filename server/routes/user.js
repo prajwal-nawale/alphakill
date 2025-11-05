@@ -230,38 +230,40 @@ userRouter.post("/generateReport",userMiddleware, async (req, res) => {
       .map((ans, idx) => `${idx + 1}. Q: ${ans.question}\n   A: ${ans.answer}`)
       .join("\n\n");
 
-    const prompt = `
-Analyze these interview answers like a experienced developer giving friendly feedback but strict to a junior colleague. The user spoke their answers, so ignore small grammar issues from voice transcription.
-If user says i dont know or something relevent to mid aur business case related questions for 1 or 2 questions is somewhat understandable if he is saying dont know to all quuestion directly comdemn it as this is waste to interviewers time
-If a person is deliberately trying to give irrelevant answers just score him 0 for that answer and mention in feedback that this is not acceptable in real interviews.
+const prompt = `
+Analyze these interview answers like an experienced developer giving friendly but strict feedback to a junior colleague. The answers are voice-transcribed, so ignore small grammar issues.
 
-Do NOT print any introduction, headings, Markdown, or conversational preface. 
-Do NOT use stars (**), triple-dashes, or heading marks (###). 
-Do NOT say "Of course", "As an AI", or similar.
-Provide your response using exactly this format with #### between sections:
+If the user says "I don't know" or gives unclear business-case responses for one or two questions, that's understandable. But if they say "I don't know" for most questions, call it out as a waste of the interviewer’s time.  
+If the answers are irrelevant or random, score that answer 0 and clearly mention in feedback that it's unacceptable in real interviews.
+
+Do NOT use Markdown symbols like *, **, ###, or ---.
+But mark $$ after each Q&A feedback to separate them clearly.
+Do NOT include any introduction, greetings, or preface.  
+Do NOT repeat section titles.  
+Use exactly the following plain-text structure and spacing — no extra lines, no formatting symbols:
 
 Overall Score: [number between 0-100]
 ####
-Strengths:
+
 - [Strength 1 with specific example]
 - [Strength 2 with specific example]
 - [Strength 3 with specific example]
 ####
-Areas to Work On:
+
 - [Area 1 with practical suggestion]
 - [Area 2 with practical suggestion]
 - [Area 3 with practical suggestion]
 ####
-Communication Skills:
-[Straightforward assessment in casual language]
+
+[Communication Skills: Straightforward assessment in casual language]
 ####
-Technical Knowledge:
-[Honest evaluation of what they know and what's missing]
+
+[Technical Knowledge: Honest evaluation of what they know and what’s missing]
 ####
-Quick Tips for Next Time:
-1. [Actionable tip 1]
-2. [Actionable tip 2] 
-3. [Actionable tip 3]
+
+ [Quick Tips for Next Time: Actionable tip 1]
+ [Actionable tip 2]
+[Actionable tip 3]
 ####
 Scores Breakdown:
 Clarity: [score]/10
@@ -270,45 +272,44 @@ Depth: [score]/10
 Confidence: [score]/10
 Overall: [score]/10
 ####
-Answer Feedback:
+
 Q1: [question text]
 F: [Specific feedback for this answer]
---
-Q2: [question text] 
+$$
+Q2: [question text]
 F: [Specific feedback for this answer]
---
-Q3: [question text] 
+$$
+Q3: [question text]
 F: [Specific feedback for this answer]
---
-Q4: [question text] 
+$$
+Q4: [question text]
 F: [Specific feedback for this answer]
---
-Q5: [question text] 
+$$
+Q5: [question text]
 F: [Specific feedback for this answer]
---
-Q6: [question text] 
+$$
+Q6: [question text]
 F: [Specific feedback for this answer]
---
-Q7: [question text] 
+$$
+Q7: [question text]
 F: [Specific feedback for this answer]
---
-Q8: [question text] 
+$$
+Q8: [question text]
 F: [Specific feedback for this answer]
---
-Q9: [question text] 
+$$
+Q9: [question text]
 F: [Specific feedback for this answer]
---
-Q10: [question text] 
+$$
+Q10: [question text]
 F: [Specific feedback for this answer]
---
-
+$$
 ####
-Last feedback must be very honest and harsh if he did well apreciate but if he tried to make irrelevent answers be harsh
+after each question when feedback is generated i need feedback in next line not append to question
+Last feedback must be brutally honest. If the candidate did well, appreciate it directly. If the answers were irrelevant or lazy, criticize clearly — no sugarcoating.
 Here are the questions and answers to analyze:
-consider your self as first person no, extra paras saying  as an AI model etc just give the feedback directly
 ${answersText}
 
-Remember: Talk like a real person, not a corporate robot. Be helpful but honest.
+Write only the evaluation — no commentary or explanation outside the structure.
 `;
 
     const completion = await openai.chat.completions.create({
@@ -468,7 +469,7 @@ function parseReport(aiResponse) {
     technicalKnowledge: sections[4] || "",
     quickTips: toArray(sections[5]),
     scoresBreakdown: parseScores(sections[6]),
-    answerFeedback: sections[7] ? sections[7].split("--").map(s => s.trim()).filter(Boolean) : [],
+    answerFeedback: sections[7] ? sections[7].split("$$").map(s => s.trim()).filter(Boolean) : [],
     lastFeedback: sections[8] || ""
   };
 }

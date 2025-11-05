@@ -73,8 +73,8 @@ export default function Report() {
       </h1>
 
       {/* Overall Score */}
-      <div className="bg-white p-6 rounded-2xl shadow-md mb-6 hover:shadow-lg transition-all duration-300">
-        <h2 className="text-xl font-semibold text-blue-600 border-b pb-2 mb-3">
+      <div className="bg-white p-6 rounded-2xl shadow-md mb-6  transition-all duration-300">
+        <h2 className="text-xl font-semibold text-red-500 border-b pb-2 mb-3">
           Overall Score
         </h2>
         <p className="text-gray-700 text-lg">{overallScore}</p>
