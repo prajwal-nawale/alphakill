@@ -6,7 +6,7 @@ const OpenAI = require("openai");
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY3,
+  apiKey: process.env.OPENROUTER_API_KEY3_PAID,
   defaultHeaders: {
     "HTTP-Referer": "http://localhost:3000",
     "X-Title": "My App",
@@ -20,7 +20,7 @@ const openai = new OpenAI({
 const jwt=require("jsonwebtoken");
 const { JWT_USER_SECRET }=process.env
 const  { userMiddleware }=require("../middleware/user");
-const aiModel="deepseek/deepseek-chat-v3.1:free";
+const aiModel="x-ai/grok-4-fast";
 
 const { userModel,userInputModel,aiQuestionModel,userAnswernModel,reportModel }=require("../db");
 
@@ -231,16 +231,59 @@ userRouter.post("/generateReport",userMiddleware, async (req, res) => {
       .join("\n\n");
 
 const prompt = `
-Analyze these interview answers like an experienced developer giving friendly but strict feedback to a junior colleague. The answers are voice-transcribed, so ignore small grammar issues.
+Analyze these interview answers like an experienced developer giving friendly but strict feedback to a junior colleague. 
+The answers are voice-transcribed, so ignore small grammar issues.
 
-If the user says "I don't know" or gives unclear business-case responses for one or two questions, that's understandable. But if they say "I don't know" for most questions, call it out as a waste of the interviewer’s time.  
+If the user says "I don't know" or gives unclear business-case responses for one or two questions, that's understandable. 
+But if they say "I don't know" for most questions, call it out as a waste of the interviewer’s time.  
 If the answers are irrelevant or random, score that answer 0 and clearly mention in feedback that it's unacceptable in real interviews.
 
-Do NOT use Markdown symbols like *, **, ###, or ---.
-But mark $$ after each Q&A feedback to separate them clearly.
+
 Do NOT include any introduction, greetings, or preface.  
 Do NOT repeat section titles.  
 Use exactly the following plain-text structure and spacing — no extra lines, no formatting symbols:
+Do NOT use Markdown symbols like *, **, ###, or ---.
+But mark $$ after each Q&A feedback to separate them clearly. Also separate main sections with ####.
+
+
+Important: this is how parse function is parsing your response:
+    function parseReport(aiResponse) {
+  const sections = aiResponse.split("####").map(s => s.trim());
+
+  const toArray = (text) => {
+    if (!text) return [];
+    return text
+      .split("\n")
+      .map(line => line.replace(/^[-\d\.\s]+/, "").trim()) // remove bullets/numbers
+      .filter(Boolean);
+  };
+
+  return {
+    overallScore: sections[0] || "",
+    strengths: toArray(sections[1]),
+    areasToWorkOn: toArray(sections[2]),
+    communicationSkills: sections[3] || "",
+    technicalKnowledge: sections[4] || "",
+    quickTips: toArray(sections[5]),
+    scoresBreakdown: parseScores(sections[6]),
+    answerFeedback: sections[7] ? sections[7].split("$$").map(s => s.trim()).filter(Boolean) : [],
+    lastFeedback: sections[8] || ""
+  };
+}
+
+// helper to parse scores neatly
+function parseScores(text) {
+  if (!text) return {};
+  const lines = text.split("\n");
+  const obj = {};
+  lines.forEach(line => {
+    const [key, val] = line.split(":");
+    if (key && val) obj[key.trim()] = val.trim();
+  });
+  return obj;
+}
+
+Important: Here is the structure you must follow exactly:
 
 Overall Score: [number between 0-100]
 ####
@@ -250,20 +293,22 @@ Overall Score: [number between 0-100]
 - [Strength 3 with specific example]
 ####
 
-- [Area 1 with practical suggestion]
-- [Area 2 with practical suggestion]
-- [Area 3 with practical suggestion]
+- [Area 1 to work on with practical suggestion]
+- [Area 2 to work on with practical suggestion]
+- [Area 3 to work on with practical suggestion]
 ####
 
-[Communication Skills: Straightforward assessment in casual language]
+- [Communication Skill 1 with specific example]
+- [Communication Skill 2 with specific example]
 ####
 
-[Technical Knowledge: Honest evaluation of what they know and what’s missing]
+- [Technical Knowledge 1 with practical suggestion]
+- [Technical Knowledge 2 with practical suggestion]
 ####
 
- [Quick Tips for Next Time: Actionable tip 1]
- [Actionable tip 2]
-[Actionable tip 3]
+-[Quick Actionable tip 1 for Next Time]
+-[Quick Actionable tip 2 for Next Time]
+
 ####
 Scores Breakdown:
 Clarity: [score]/10
@@ -272,7 +317,7 @@ Depth: [score]/10
 Confidence: [score]/10
 Overall: [score]/10
 ####
-
+Answer Feedback:
 Q1: [question text]
 F: [Specific feedback for this answer]
 $$
@@ -304,8 +349,9 @@ Q10: [question text]
 F: [Specific feedback for this answer]
 $$
 ####
-after each question when feedback is generated i need feedback in next line not append to question
-Last feedback must be brutally honest. If the candidate did well, appreciate it directly. If the answers were irrelevant or lazy, criticize clearly — no sugarcoating.
+[Last feedback must be brutally honest]
+If the candidate did well, appreciate it directly. If the answers were irrelevant or lazy, criticize clearly — no sugarcoating.
+- Always include the Last Feedback section at the end.
 Here are the questions and answers to analyze:
 ${answersText}
 
@@ -313,7 +359,7 @@ Write only the evaluation — no commentary or explanation outside the structure
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3.1:free",
+      model: aiModel,
       messages: [{ role: "user", content: prompt }],
       max_tokens: 1500,
       temperature: 0.1
