@@ -8,16 +8,20 @@ export default function Layout() {
     <div>
       {/* Topbar - Shows for logged in users only */}
       <div style={{ 
-        backgroundColor: 'black', 
+        backgroundColor: '#66615E', 
         color: 'white', 
         padding: '1rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-          <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
-            Prep Me Up
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <img
+              src="/logo.png"
+              alt="Prep Me Up Logo"
+              style={{ height: '50px', width: 'auto  ' }}
+            />
           </Link>
         </div>
 

@@ -41,20 +41,20 @@ export default function Auth() {
     <div>
       {/* Topbar - Only shows app name when not logged in */}
       <div style={{ 
-        backgroundColor: 'black', 
+        backgroundColor: 'grey', 
         color: 'white', 
         padding: '1rem',
         display: 'flex',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center'
       }}>
-        <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-          Prep Me Up
-        </div>
-        <div>
-          {/* No logout button here */}
-        </div>
+        <img 
+          src="/logo1.png" 
+          alt="Prep Me Up Logo" 
+          style={{ height: '50px', width: '250px' }} 
+        />
       </div>
+      
 
       {/* Auth Form */}
       <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
