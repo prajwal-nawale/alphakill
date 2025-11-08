@@ -6,6 +6,7 @@ import Skill from "./pages/Skill";
 import Interview from "./pages/Interview";
 import Report from "./pages/Report";
 import ReportsList from "./pages/ReportsList";
+import LoginHome from "./components/LoginHome";
 // Create Auth Context
 const AuthContext = createContext();
 
@@ -57,7 +58,7 @@ function App() {
           {user ? (
             <>
             <Route path="/*" element={<Layout />}>
-              <Route index element={<Home />} />
+              <Route index element={<LoginHome />} />
               <Route path="skill" element={<Skill />} />
               <Route path="interview" element={<Interview />} />
               <Route path="report/:reportId" element={<Report />} />

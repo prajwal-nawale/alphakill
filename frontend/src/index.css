@@ -5,13 +5,11 @@
 }
 
 body {
-  background-color: #FFFAFA;
+  background-color: #efece6;
   font-family: var(--font-sans);
 }
-@theme {
-  --color-chestnut-500:#FFFFFF;
-  
-}
+
+
 
 @layer components{
     .card {
@@ -21,4 +19,35 @@ body {
 
         @apply flex justify-center text-xl font-semibold text-blue-600 border-b pb-2 mb-3;
     }
+    .zigzag-divider {
+      background: repeating-conic-gradient(
+        from 45deg,
+        #efece6 0deg 22.5deg,
+
+      );
+      clip-path: polygon(
+        0% 100%, 
+        5% 0%, 
+        10% 100%, 
+        15% 0%, 
+        20% 100%, 
+        25% 0%, 
+        30% 100%, 
+        35% 0%, 
+        40% 100%, 
+        45% 0%, 
+        50% 100%, 
+        55% 0%, 
+        60% 100%, 
+        65% 0%, 
+        70% 100%, 
+        75% 0%, 
+        80% 100%, 
+        85% 0%, 
+        90% 100%, 
+        95% 0%, 
+        100% 100%
+      );
+  }
+
 }

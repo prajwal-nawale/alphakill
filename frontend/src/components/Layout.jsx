@@ -55,7 +55,7 @@ export default function Layout() {
       </div>
 
       {/* Main Content Area */}
-      <div style={{ padding: '2rem' }}>
+      <div >
         <Outlet />
       </div>
     </div>
