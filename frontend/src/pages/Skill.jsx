@@ -16,6 +16,41 @@ export default function Skill() {
     // This is for real-time display during speaking
     setCurrentInput(text);
   };
+  const [resumeFile, setResumeFile] = useState(null);
+
+const handleResumeUpload = async () => {
+  if (!resumeFile) {
+    setMessage("Please select a file first.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("resume", resumeFile);
+    formData.append("userId", user.userId);
+
+    const res = await fetch("http://localhost:3000/v1/user/uploadResume", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      setSkills(data.extractedSkills);
+      setMessage("✅ Skills extracted from resume successfully!");
+    } else {
+      setMessage("❌ " + data.message);
+    }
+  } catch (err) {
+    console.error(err);
+    setMessage("Error uploading resume.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSkillsUpdate = (newSkillText) => {
     // Process the spoken text and extract individual skills
@@ -113,8 +148,34 @@ export default function Skill() {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <h2>Add Your Skills for Interview Preparation</h2>
+    <>
+
+    {/* Resume Upload Section */}
+<div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+  <h3>📄 Upload Resume (PDF or Image)</h3>
+  <input
+    type="file"
+    accept=".pdf, .png, .jpg, .jpeg"
+    onChange={(e) => setResumeFile(e.target.files[0])}
+    style={{ marginBottom: '10px' }}
+  />
+  <button
+    onClick={handleResumeUpload}
+    disabled={loading || !resumeFile}
+    style={{
+      padding: '10px 20px',
+      backgroundColor: resumeFile ? '#007bff' : '#ccc',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: resumeFile ? 'pointer' : 'not-allowed'
+    }}
+  >
+    {loading ? "⏳ Extracting..." : "Upload and Extract Skills"}
+  </button>
+</div>
+    <div className="flex flex-col max-w-3xl mx-auto p-6">
+      <h1>Add Your Skills for Interview Preparation</h1>
       <p>Add skills one by one using voice or typing. You can add multiple skills!</p>
       
       {/* Voice Input Section */}
@@ -278,5 +339,6 @@ export default function Skill() {
         </ol>
       </div>
     </div>
+    </>
   );
 }

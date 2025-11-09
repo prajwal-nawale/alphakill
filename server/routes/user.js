@@ -3,6 +3,13 @@ require('dotenv').config();
 const { Router }=require("express");
 const userRouter=Router();
 const OpenAI = require("openai");
+const fs=require("fs");
+const multer=require("multer");
+const FormData=require("form-data");
+const pdfParse = require("pdf-parse");
+
+
+const upload = multer({ dest: "uploads/" }); 
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -132,6 +139,101 @@ userRouter.post("/addInputSkill",userMiddleware,async (req,res)=>{
     }
 
 })
+// ✅ Resume Upload (uses pdf-parse, not base64)
+
+
+userRouter.post(
+  "/uploadResume",
+  userMiddleware,
+  upload.single("resume"),
+  async (req, res) => {
+    try {
+      const file = req.file;
+      const { userId } = req.body;
+
+      if (!file) {
+        return res.status(400).json({ success: false, message: "No resume uploaded" });
+      }
+
+      // ✅ Step 1: Extract text using pdf-parse
+      const dataBuffer = fs.readFileSync(file.path);
+      const pdfData = await pdfParse(dataBuffer);
+      const resumeText = pdfData.text?.trim();
+
+      if (!resumeText || resumeText.length < 50) {
+        fs.unlinkSync(file.path);
+        return res.status(400).json({
+          success: false,
+          message: "Resume text is too short or unreadable. Please upload a valid PDF.",
+        });
+      }
+
+      // ✅ Step 2: Create prompt for Grok model
+      const prompt = `
+
+    This is a parsed text 
+    Extract only hard and soft skills from this resume. 
+    look for achievements ,experience, and projects that demonstrate skills.
+    ignore personal details like name, contact info, etc.
+    if projects are mentioned, extract relevant skills from them.
+    check overview for job role as well
+    Return result strictly as a JSON array of skill strings,
+    sentenses with keyword as prefix or suffix for certificates.
+    focus on project and experiance and and try to extract key points
+
+
+
+Resume content:
+${resumeText}
+`;
+
+      // ✅ Step 3: Send to Grok for skill extraction
+      const completion = await openai.chat.completions.create({
+        model: aiModel, 
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+      });
+
+      const aiResponse = completion.choices[0]?.message?.content?.trim() || "";
+
+      // ✅ Step 4: Parse response safely
+      let skills = [];
+      try {
+        skills = JSON.parse(aiResponse);
+      } catch {
+        // fallback: split by commas or new lines
+        skills = aiResponse
+          .replace(/[\[\]\n"]/g, "")
+          .split(/,|;/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      // ✅ Step 5: Save to MongoDB
+      await userInputModel.findOneAndUpdate(
+        { userId },
+        { $set: { input: skills } },
+        { new: true, upsert: true }
+      );
+
+      // ✅ Step 6: Clean up temp file
+      fs.unlinkSync(file.path);
+
+      return res.json({
+        success: true,
+        message: "Resume processed successfully!",
+        extractedSkills: skills,
+      });
+    } catch (err) {
+      console.error("❌ Error processing resume:", err);
+      res.status(500).json({
+        success: false,
+        message: "Error processing resume",
+        error: err.message,
+      });
+    }
+  }
+);
 userRouter.post("/aiQuestionGeneration",userMiddleware, async (req, res) => {
   try {
     const { userId } = req.body;
@@ -536,3 +638,6 @@ function parseScores(text) {
 module.exports={
     userRouter:userRouter
 }
+
+
+
