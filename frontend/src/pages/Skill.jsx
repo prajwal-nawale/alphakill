@@ -1,90 +1,78 @@
 import { useState } from "react";
-import { useAuth } from '../App';
+import { useAuth } from "../App";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Mic from "../components/Mic";
 
 export default function Skill() {
   const [loading, setLoading] = useState(false);
-  const [skills, setSkills] = useState([]); // Array to store multiple skills
-  const [currentInput, setCurrentInput] = useState(""); // For manual typing
+  const [skills, setSkills] = useState([]);
+  const [currentInput, setCurrentInput] = useState("");
   const [message, setMessage] = useState("");
+  const [resumeFile, setResumeFile] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleTranscript = (text) => {
-    // This is for real-time display during speaking
-    setCurrentInput(text);
-  };
-  const [resumeFile, setResumeFile] = useState(null);
+  const handleTranscript = (text) => setCurrentInput(text);
 
-const handleResumeUpload = async () => {
-  if (!resumeFile) {
-    setMessage("Please select a file first.");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("resume", resumeFile);
-    formData.append("userId", user.userId);
-
-    const res = await fetch("http://localhost:3000/v1/user/uploadResume", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      setSkills(data.extractedSkills);
-      setMessage("✅ Skills extracted from resume successfully!");
-    } else {
-      setMessage("❌ " + data.message);
+  const handleResumeUpload = async () => {
+    if (!resumeFile) {
+      setMessage("Please select a file first.");
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    setMessage("Error uploading resume.");
-  } finally {
-    setLoading(false);
-  }
-};
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("resume", resumeFile);
+      formData.append("userId", user.userId);
+
+      const res = await fetch("http://localhost:3000/v1/user/uploadResume", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setSkills(data.extractedSkills);
+        setMessage("✅ Skills extracted from resume successfully!");
+      } else {
+        setMessage("❌ " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("Error uploading resume.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSkillsUpdate = (newSkillText) => {
-    // Process the spoken text and extract individual skills
     const newSkills = newSkillText
-      .split(/[,.\n]+/) // Split by commas, periods, or newlines
-      .map(skill => skill.trim())
-      .filter(skill => skill.length > 0);
-    
-    setSkills(prev => {
-      const combined = [...prev, ...newSkills];
-      // Remove duplicates
-      return [...new Set(combined)];
-    });
-    
-    setCurrentInput(""); // Clear current input after adding to skills
+      .split(/[,.\n]+/)
+      .map((skill) => skill.trim())
+      .filter((skill) => skill.length > 0);
+
+    setSkills((prev) => [...new Set([...prev, ...newSkills])]);
+    setCurrentInput("");
   };
 
   const handleManualAdd = () => {
     if (currentInput.trim()) {
       const newSkills = currentInput
         .split(/[,.\n]+/)
-        .map(skill => skill.trim())
-        .filter(skill => skill.length > 0);
-      
-      setSkills(prev => {
-        const combined = [...prev, ...newSkills];
-        return [...new Set(combined)];
-      });
+        .map((skill) => skill.trim())
+        .filter((skill) => skill.length > 0);
+
+      setSkills((prev) => [...new Set([...prev, ...newSkills])]);
       setCurrentInput("");
     }
   };
 
   const removeSkill = (indexToRemove) => {
-    setSkills(prev => prev.filter((_, index) => index !== indexToRemove));
+    setSkills((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
   const clearAllSkills = () => {
@@ -106,7 +94,6 @@ const handleResumeUpload = async () => {
       const token = localStorage.getItem("token");
       const skillsText = skills.join(", ");
 
-      // Step 1: Save the skills input
       await axios.post(
         "http://localhost:3000/v1/user/addInputSkill",
         { userId: user.userId, input: skillsText },
@@ -118,7 +105,6 @@ const handleResumeUpload = async () => {
         }
       );
 
-      // Step 2: Generate AI-based questions
       const response = await axios.post(
         "http://localhost:3000/v1/user/aiQuestionGeneration",
         { userId: user.userId, finalInput: skillsText },
@@ -131,16 +117,12 @@ const handleResumeUpload = async () => {
       );
 
       setMessage(response.data.message || "Questions generated successfully!");
-
-      // Step 3: Navigate to home
-      setTimeout(() => {
-        navigate("/interview");
-      }, 1500);
-
+      setTimeout(() => navigate("/interview"), 1500);
     } catch (error) {
       console.error(error);
       setMessage(
-        error.response?.data?.message || "Failed to generate questions. Try again"
+        error.response?.data?.message ||
+          "Failed to generate questions. Try again"
       );
     } finally {
       setLoading(false);
@@ -148,189 +130,142 @@ const handleResumeUpload = async () => {
   };
 
   return (
-    <>
+    <div className="flex flex-col items-center justify-center p-6 bg-[#f5f4f0] min-h-screen">
+      {/* --- TOP SECTION: Upload + Voice Input --- */}
+      <div className="flex flex-col lg:flex-row gap-6 w-full max-w-5xl justify-center mb-8">
+        {/* Upload Resume */}
+        <div className="bg-[#ddd6ca] p-6 rounded-xl shadow-md w-full lg:w-1/2">
+          <h3 className="text-lg font-semibold mb-3">
+            📄 Upload Resume (PDF)
+          </h3>
+          <input
+            type="file"
+            accept=".pdf, .png, .jpg, .jpeg"
+            onChange={(e) => setResumeFile(e.target.files[0])}
+            className="mb-4 block w-full text-gray-700 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring focus:ring-blue-200"
+          />
+          <button
+            onClick={handleResumeUpload}
+            disabled={loading || !resumeFile}
+            className={`w-full py-2 px-4 rounded-md text-white font-medium transition ${
+              resumeFile
+                ? "bg-[#c89a87] hover:bg-[#ab4829]"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {loading ? "⏳ Extracting..." : "Upload and Extract Skills"}
+          </button>
+        </div>
 
-    {/* Resume Upload Section */}
-<div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-  <h3>📄 Upload Resume (PDF or Image)</h3>
-  <input
-    type="file"
-    accept=".pdf, .png, .jpg, .jpeg"
-    onChange={(e) => setResumeFile(e.target.files[0])}
-    style={{ marginBottom: '10px' }}
-  />
-  <button
-    onClick={handleResumeUpload}
-    disabled={loading || !resumeFile}
-    style={{
-      padding: '10px 20px',
-      backgroundColor: resumeFile ? '#007bff' : '#ccc',
-      color: 'white',
-      border: 'none',
-      borderRadius: '4px',
-      cursor: resumeFile ? 'pointer' : 'not-allowed'
-    }}
-  >
-    {loading ? "⏳ Extracting..." : "Upload and Extract Skills"}
-  </button>
-</div>
-    <div className="flex flex-col max-w-3xl mx-auto p-6">
-      <h1>Add Your Skills for Interview Preparation</h1>
-      <p>Add skills one by one using voice or typing. You can add multiple skills!</p>
-      
-      {/* Voice Input Section */}
-      <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-        <h3>🎤 Voice Input (Recommended):</h3>
-        <p style={{ color: '#666', marginBottom: '15px' }}>
-          <strong>Tip:</strong> Say skills one by one, like "JavaScript", then "React", then "Node.js". 
-          Click "Add to Skills" after each group.
-        </p>
-        <Mic 
-          onTranscript={handleTranscript} 
-          onSkillsUpdate={handleSkillsUpdate}
-        />
+        {/* Voice Input */}
+        <div className="bg-[#ddd6ca] p-6 rounded-xl shadow-md w-full lg:w-1/2">
+          <h3 className="text-lg font-semibold mb-3">
+            🎤 Voice Input
+          </h3>
+          <p className="text-gray-600 mb-4 text-sm">
+            <strong>Tip:</strong> Say skills one by one, like "JavaScript",
+            "React", "Node.js". Click “Add to Skills” after each group.
+          </p>
+          <Mic onTranscript={handleTranscript} onSkillsUpdate={handleSkillsUpdate} />
+        </div>
       </div>
 
-      {/* Manual Input Section */}
-      <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-        <h3>⌨️ Type Skills:</h3>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+      {/* --- Manual Input Section --- */}
+      <div className="bg-[#f8f9fa] p-6 rounded-xl shadow-md w-full max-w-3xl mb-8">
+        <h3 className="text-lg font-semibold mb-3">⌨️ Type Skills:</h3>
+        <div className="flex gap-3 mb-2">
           <input
             type="text"
             value={currentInput}
             onChange={(e) => setCurrentInput(e.target.value)}
             placeholder="Type skills (separate with commas): JavaScript, React, Node.js"
-            style={{ 
-              flex: 1,
-              padding: '10px', 
-              fontSize: '16px',
-              border: '1px solid #ccc',
-              borderRadius: '4px'
-            }}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleManualAdd();
-              }
-            }}
+            className="flex-1 border border-gray-300 rounded-md p-2 text-gray-700 focus:outline-none focus:ring focus:ring-blue-200"
+            onKeyPress={(e) => e.key === "Enter" && handleManualAdd()}
           />
-          <button 
+          <button
             onClick={handleManualAdd}
             disabled={!currentInput.trim()}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: currentInput.trim() ? '#007bff' : '#ccc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: currentInput.trim() ? 'pointer' : 'not-allowed'
-            }}
+            className={`px-4 py-2 rounded-md text-white font-medium transition ${
+              currentInput.trim()
+                ? "bg-blue-500 hover:bg-blue-600"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
           >
             Add Skill
           </button>
         </div>
-        <p style={{ color: '#666', fontSize: '14px' }}>
+        <p className="text-gray-500 text-sm">
           Separate multiple skills with commas: "JavaScript, React, Node.js"
         </p>
       </div>
 
-      {/* Skills Display */}
+      {/* --- Display Skills --- */}
       {skills.length > 0 && (
-        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#e7f3ff', borderRadius: '8px' }}>
-          <h3>✅ Your Skills ({skills.length}):</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '15px' }}>
+        <div className="bg-[#ddd6ca] p-6 rounded-xl shadow-md w-full max-w-3xl mb-8">
+          <h3 className="text-lg font-semibold text-gray-700">
+            ✅ Your Skills ({skills.length})
+          </h3>
+          <div className="flex flex-wrap gap-2 mt-3">
             {skills.map((skill, index) => (
               <div
                 key={index}
-                style={{
-                  padding: '8px 15px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  borderRadius: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
+                className="bg-[#91b8b6] text-white px-4 py-2 rounded-full flex items-center gap-2"
               >
-                {skill}
+                <span>{skill}</span>
                 <button
                   onClick={() => removeSkill(index)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontSize: '16px'
-                  }}
+                  className="text-white hover:text-gray-200"
                 >
                   ×
                 </button>
               </div>
             ))}
           </div>
-          
-          <button 
+          <button
             onClick={clearAllSkills}
-            style={{
-              marginTop: '15px',
-              padding: '8px 16px',
-              backgroundColor: '#dc3545',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
+            className="mt-4 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition"
           >
             🗑️ Clear All Skills
           </button>
         </div>
       )}
 
-      {/* Submit Button */}
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <button 
-          onClick={handleSkillSubmit} 
+      {/* --- Generate Questions Button --- */}
+      <div className="text-center mb-8">
+        <button
+          onClick={handleSkillSubmit}
           disabled={loading || skills.length === 0}
-          style={{
-            padding: '15px 30px',
-            backgroundColor: loading ? '#ccc' : (skills.length > 0 ? '#28a745' : '#ccc'),
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: (loading || skills.length === 0) ? 'not-allowed' : 'pointer',
-            fontSize: '18px',
-            fontWeight: 'bold'
-          }}
+          className={`py-3 px-6 rounded-md text-white font-semibold text-lg transition ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : skills.length > 0
+              ? "bg-[#b5c6bf] hover:bg-[#91b8b6]"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
         >
-          {loading ? "⏳ Generating Questions..." : `🚀 Generate Questions (${skills.length} skills)`}
+          {loading
+            ? "⏳ Generating Questions..."
+            : `🚀 Generate Questions (${skills.length} skills)`}
         </button>
       </div>
 
-      {/* Message Display */}
+      {/* --- Message --- */}
       {message && (
-        <div style={{ 
-          marginTop: '20px',
-          padding: '15px',
-          backgroundColor: message.includes('successfully') ? '#d4edda' : '#f8d7da',
-          border: `1px solid ${message.includes('successfully') ? '#c3e6cb' : '#f5c6cb'}`,
-          borderRadius: '4px',
-          color: message.includes('successfully') ? '#155724' : '#721c24',
-          fontSize: '16px'
-        }}>
-          {message.includes('successfully') ? '✅ ' : '❌ '}
+        <div
+          className={`w-full max-w-3xl p-4 rounded-md text-center font-medium ${
+            message.includes("successfully")
+              ? "bg-green-100 text-green-700 border border-green-300"
+              : "bg-red-100 text-red-700 border border-red-300"
+          }`}
+        >
           {message}
         </div>
       )}
 
-      {/* Tips */}
-      <div style={{ 
-        marginTop: '30px',
-        padding: '15px',
-        backgroundColor: '#fff3cd',
-        border: '1px solid #ffeaa7',
-        borderRadius: '4px'
-      }}>
-        <h4>💡 How to use:</h4>
-        <ol style={{ margin: '10px 0', paddingLeft: '20px' }}>
+      {/* --- Tips Section --- */}
+      <div className="bg-yellow-100 border border-yellow-200 rounded-xl p-6 w-full max-w-3xl mt-8">
+        <h4 className="text-lg font-semibold mb-2">💡 How to use:</h4>
+        <ol className="list-decimal list-inside space-y-1 text-gray-700 text-sm">
           <li>Click "Start Speaking" and say one skill at a time</li>
           <li>Click "Add to Skills" after each group of skills</li>
           <li>Use typing for specific technology names</li>
@@ -339,6 +274,5 @@ const handleResumeUpload = async () => {
         </ol>
       </div>
     </div>
-    </>
   );
 }
