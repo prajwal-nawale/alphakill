@@ -1,0 +1,58 @@
+
+
+const jwt = require("jsonwebtoken");
+const { JWT_ADMIN_SECRET } = process.env;
+
+function adminMiddleware(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization || req.headers.token;
+    
+    if (!authHeader) {
+      return res.status(403).json({
+        message: "No token provided",
+        success: false
+      });
+    }
+    
+    // Handle both "Bearer token" and just "token" formats
+    const token = authHeader.startsWith('Bearer ') 
+      ? authHeader.slice(7) 
+      : authHeader;
+    
+    if (!token) {
+      return res.status(403).json({
+        message: "No token provided",
+        success: false
+      });
+    }
+    
+    const decoded = jwt.verify(token, JWT_ADMIN_SECRET);
+    req.adminId = decoded.id;
+    next();
+  } catch (err) {
+    console.error("Authentication error:", err);
+    
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(403).json({
+        message: "Invalid token",
+        success: false
+      });
+    }
+    
+    if (err.name === 'TokenExpiredError') {
+      return res.status(403).json({
+        message: "Token expired",
+        success: false
+      });
+    }
+    
+    res.status(500).json({
+      message: "Internal server error during authentication",
+      success: false
+    });
+  }
+}
+
+module.exports = {
+  adminMiddleware
+};
