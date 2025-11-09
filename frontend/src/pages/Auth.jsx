@@ -1,138 +1,107 @@
-
 import { useState } from "react";
-import { useAuth } from '../App';
-// import { useNavigate } from "react-router-dom";
+import { useAuth } from "../App";
 import axios from "axios";
 
 export default function Auth() {
+  const [isSignup, setIsSignup] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [isSignup, setIsSignup] = useState(true);
-  
+
   const { login } = useAuth();
-  // const navigate = useNavigate();
 
   async function handleAuth(e) {
     e.preventDefault();
-
     try {
       if (isSignup) {
-        const response = await axios.post("http://localhost:3000/v1/user/signup", {
-          name, email, password
+        const res = await axios.post("http://localhost:3000/v1/user/signup", {
+          name,
+          email,
+          password,
         });
-        setMessage(response.data.message);
+        setMessage(res.data.message);
       } else {
-        const response = await axios.post("http://localhost:3000/v1/user/signin", {
-          email, password
+        const res = await axios.post("http://localhost:3000/v1/user/signin", {
+          email,
+          password,
         });
-        
-        login(response.data.token, response.data.userId, response.data.name || name);
+        login(res.data.token, res.data.userId, res.data.name || name);
         setMessage("Login successful!");
-        // No need to navigate - the App.jsx will automatically redirect to Layout
       }
-    } catch (error) {
-      setMessage(error.response?.data?.message || "Something went wrong");
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Something went wrong");
     }
   }
 
   return (
-    <div>
-      {/* Topbar - Only shows app name when not logged in */}
-      <div style={{ 
-        backgroundColor: 'grey', 
-        color: 'white', 
-        padding: '1rem',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <img 
-          src="/logo1.png" 
-          alt="Prep Me Up Logo" 
-          style={{ height: '50px', width: '250px' }} 
-        />
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Topbar */}
+      <div className="bg-gray-800 text-white flex justify-center items-center py-3 shadow-md">
+        <img src="/logo1.png" alt="Prep Me Up Logo" className="h-12 w-auto" />
       </div>
-      
 
       {/* Auth Form */}
-      <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
-        <h2>{isSignup ? 'Create Account' : 'Login to Your Account'}</h2>
-        
-        <form onSubmit={handleAuth}>
-          {isSignup && (
-            <div>
-              <input 
-                type="text" 
-                placeholder="Your Name" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                style={{ width: '100%', padding: '10px', margin: '10px 0' }}
+      <div className="flex flex-col items-center justify-center flex-1">
+        <div className="bg-white p-8 rounded-2xl shadow-lg w-96">
+          <h2 className="text-2xl font-semibold mb-4 text-center">
+            {isSignup ? "Create Account" : "Login to Your Account"}
+          </h2>
+          <form onSubmit={handleAuth} className="space-y-4">
+            {isSignup && (
+              <input
+                type="text"
+                placeholder="Your Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
+            )}
+            <input
+              type="email"
+              placeholder="Your Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="password"
+              placeholder="Your Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="w-full p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              {isSignup ? "Sign Up" : "Sign In"}
+            </button>
+          </form>
+
+          {message && (
+            <p
+              className={`text-center mt-4 ${
+                message.includes("successful") ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {message}
+            </p>
           )}
-          
-          <input 
-            type='email' 
-            placeholder='Your Email' 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ width: '100%', padding: '10px', margin: '10px 0' }}
-          />
-          
-          <input 
-            type='password' 
-            placeholder='Your Password' 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: '10px', margin: '10px 0' }}
-          />
-          
-          <button 
-            type='submit' 
-            style={{ 
-              width: '100%', 
-              padding: '12px', 
-              margin: '10px 0',
-              backgroundColor: 'blue',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            {isSignup ? 'Sign Up' : 'Sign In'}
-          </button>
-        </form>
-        
-        {message && (
-          <p style={{ 
-            color: message.includes('successful') ? 'green' : 'red',
-            textAlign: 'center',
-            margin: '10px 0'
-          }}>
-            {message}
+
+          <p className="text-center mt-4">
+            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+            <button
+              onClick={() => {
+                setIsSignup(!isSignup);
+                setMessage("");
+              }}
+              className="text-blue-600 hover:underline"
+            >
+              {isSignup ? "Sign In" : "Sign Up"}
+            </button>
           </p>
-        )}
-        
-        <p style={{ textAlign: 'center' }}>
-          {isSignup ? "Already have an account?" : "Don't have an account?"}
-          <button 
-            onClick={() => {
-              setIsSignup(!isSignup);
-              setMessage("");
-            }}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              color: 'blue', 
-              cursor: 'pointer',
-              marginLeft: '5px'
-            }}
-          >
-            {isSignup ? "Sign In" : "Sign Up"}
-          </button>
-        </p>
+        </div>
       </div>
     </div>
   );
