@@ -35,45 +35,61 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-900 text-white">
+
       {/* Topbar */}
-      <div className="bg-gray-800 text-white flex justify-center items-center py-3 shadow-md">
-        <img src="/logo1.png" alt="Prep Me Up Logo" className="h-12 w-auto" />
-      </div>
+      <header className="w-full bg-gray-900 py-4 shadow">
+        <div className="flex justify-center">
+         <div className="flex justify-center items-center gap-3 relative z-30">
+              <img
+                src="/logo.png"
+                alt="Prep Me Up Logo"
+                className="h-20 w-auto pointer-events-none select-none"
+              />
+              <h1 className="text-3xl font-semibold">Prep Me Up</h1>
+            </div>
+        </div>
+      </header>
 
       {/* Auth Form */}
-      <div className="flex flex-col items-center justify-center flex-1">
-        <div className="bg-white p-8 rounded-2xl shadow-lg w-96">
-          <h2 className="text-2xl font-semibold mb-4 text-center">
-            {isSignup ? "Create Account" : "Login to Your Account"}
+      <div className="flex flex-col items-center justify-center flex-1 px-4">
+        <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-96 border border-gray-700">
+
+          <h2 className="text-2xl font-semibold mb-6 text-center text-white">
+            {isSignup ? "Create Your Account" : "Welcome Back"}
           </h2>
-          <form onSubmit={handleAuth} className="space-y-4">
+
+          <form onSubmit={handleAuth} className="space-y-5">
+
             {isSignup && (
               <input
                 type="text"
-                placeholder="Your Name"
+                placeholder="Full Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-900 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             )}
+
             <input
               type="email"
-              placeholder="Your Email"
+              placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-gray-900 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
+
             <input
               type="password"
-              placeholder="Your Password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-gray-900 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
+
             <button
               type="submit"
-              className="w-full p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="w-full p-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 transition"
             >
               {isSignup ? "Sign Up" : "Sign In"}
             </button>
@@ -81,26 +97,27 @@ export default function Auth() {
 
           {message && (
             <p
-              className={`text-center mt-4 ${
-                message.includes("successful") ? "text-green-600" : "text-red-600"
+              className={`text-center mt-4 font-medium ${
+                message.includes("successful") ? "text-green-400" : "text-red-400"
               }`}
             >
               {message}
             </p>
           )}
 
-          <p className="text-center mt-4">
-            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+          <p className="text-center mt-5 text-gray-300">
+            {isSignup ? "Already have an account?" : "Don’t have an account?"}{" "}
             <button
               onClick={() => {
                 setIsSignup(!isSignup);
                 setMessage("");
               }}
-              className="text-blue-600 hover:underline"
+              className="text-indigo-400 hover:underline"
             >
               {isSignup ? "Sign In" : "Sign Up"}
             </button>
           </p>
+
         </div>
       </div>
     </div>

@@ -5,59 +5,65 @@ export default function Layout() {
   const { user, logout } = useAuth();
 
   return (
-    <div>
-      {/* Topbar - Shows for logged in users only */}
-      <div style={{ 
-        backgroundColor: '#66615E', 
-        color: 'white', 
-        padding: '1rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Link to="/" style={{ textDecoration: 'none' }}>
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+
+      {/* Topbar */}
+      <header className="w-full bg-gray-900 border-b border-gray-800 py-4 shadow-xl z-40">
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-3">
             <img
               src="/logo.png"
               alt="Prep Me Up Logo"
-              style={{ height: '50px', width: 'auto  ' }}
+              className="h-14 w-auto pointer-events-none select-none"
             />
+            <span className="text-2xl font-semibold">Prep Me Up</span>
           </Link>
-        </div>
 
-        <div>
-          {/* Navigation for logged in users using Link */}
-          <Link to="/" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
-            Home
-          </Link>
-          <Link to="/skill" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
-            Interview
-          </Link>
-         
-          <Link to="/reports" style={{ color: 'white', textDecoration: 'none', marginRight: '2rem' }}>
-          Reports
-          </Link>
-          
-          <span style={{ marginRight: '2rem' }}>Welcome, {user?.name}!</span>
-          <button 
-            onClick={logout}
-            style={{ 
-              padding: '0.5rem 1rem',
-              backgroundColor: 'red',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-8 text-gray-300 font-medium">
 
-      {/* Main Content Area */}
-      <div >
+            <Link
+              to="/"
+              className="hover:text-white transition"
+            >
+              Home
+            </Link>
+
+            <Link
+              to="/skill"
+              className="hover:text-white transition"
+            >
+              Interview
+            </Link>
+
+            <Link
+              to="/reports"
+              className="hover:text-white transition"
+            >
+              Reports
+            </Link>
+
+            <span className="text-indigo-400 font-semibold">
+              Welcome, {user?.name}!
+            </span>
+
+            <button
+              onClick={logout}
+              className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-white font-semibold shadow-lg transition"
+            >
+              Logout
+            </button>
+          </nav>
+
+        </div>
+      </header>
+
+      {/* Main content */}
+      <main className="flex-1">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }

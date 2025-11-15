@@ -13,7 +13,10 @@ export default function AdminLogin() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:3000/v1/admin/signin", { email, password });
+      const res = await axios.post("http://localhost:3000/v1/admin/signin", {
+        email,
+        password,
+      });
       if (res.data.success) {
         adminLogin(res.data.token, res.data.adminId);
         navigate("/admin/dashboard");
@@ -24,34 +27,48 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white">
-      <h1 className="text-3xl font-bold mb-6">Admin Portal</h1>
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4">
+
+      {/* HEADER */}
+      <h1 className="text-4xl font-bold mb-10 text-red-500 drop-shadow">
+        Admin Portal
+      </h1>
+
+      {/* AUTH CARD */}
       <form
         onSubmit={handleLogin}
-        className="bg-gray-800 p-6 rounded-lg shadow-lg w-80"
+        className="bg-gray-800/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl w-96 border border-gray-700"
       >
+        {/* EMAIL */}
         <input
           type="email"
           placeholder="Admin Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="block w-full mb-3 p-2 rounded bg-gray-700 text-white"
+          className="w-full mb-4 p-3 bg-gray-900 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
         />
+
+        {/* PASSWORD */}
         <input
           type="password"
           placeholder="Admin Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="block w-full mb-3 p-2 rounded bg-gray-700 text-white"
+          className="w-full mb-4 p-3 bg-gray-900 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
         />
-        {error && <p className="text-red-400 mb-2">{error}</p>}
+
+        {/* ERROR */}
+        {error && <p className="text-red-400 mb-3 text-center">{error}</p>}
+
+        {/* LOGIN BUTTON */}
         <button
           type="submit"
-          className="bg-indigo-500 hover:bg-indigo-600 w-full py-2 rounded"
+          className="w-full p-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
         >
           Login
         </button>
       </form>
+
     </div>
   );
 }
